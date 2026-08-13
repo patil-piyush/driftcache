@@ -1,0 +1,15 @@
+{
+  "name": "@driftcache/core",
+  "version": "1.0.0",
+  "private": false,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "ioredis": "^6.0.0"
+  }
+}
