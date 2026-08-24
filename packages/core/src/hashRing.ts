@@ -1,13 +1,20 @@
 export function hashFunction(input: string): number {
-  let hash = 0x811c9dc5;
+  // FNV-1a base hash.
+  let h = 0x811c9dc5;
 
   for (let i = 0; i < input.length; i++) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193);
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
   }
 
-  return hash >>> 0;
+  // MurmurHash3 finalization mix — dramatically improves avalanche.
+  h = Math.imul(h ^ (h >>> 16), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  h ^= h >>> 16;
+
+  return h >>> 0;
 }
+
 
 export class RingNode {
   constructor(

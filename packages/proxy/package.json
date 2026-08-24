@@ -2,10 +2,18 @@
   "name": "@driftcache/proxy",
   "version": "1.0.0",
   "private": false,
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/server.js",
+  "types": "dist/server.d.ts",
+  "bin": {
+    "driftcache": "dist/cli.js"
+  },
   "scripts": {
     "build": "tsc",
+    "start": "node dist/cli.js start",
     "test": "jest"
+  },
+  "dependencies": {
+    "@driftcache/core": "1.0.0",
+    "express": "^5.2.1"
   }
 }
