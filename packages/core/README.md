@@ -39,7 +39,7 @@ DriftCache solves this with:
 ### 1. Start Redis
 
 ```bash
-git clone https://github.com/your-org/driftcache.git
+git clone https://github.com/patil-piyush/driftcache.git
 cd driftcache
 docker-compose up -d   # Starts 3 Redis instances on ports 6379, 6380, 6381
 ```
@@ -54,7 +54,7 @@ npm run build --workspace=packages/core
 ### 3. Use as a library
 
 ```typescript
-import { DriftCache, destroyShardClients } from "@driftcache/core";
+import { DriftCache, destroyShardClients } from "driftcache";
 
 const cache = new DriftCache({
   shards: [
@@ -130,32 +130,12 @@ The dashboard polls `/metrics` and `/health` from the proxy and displays:
 - Real-time shard health status
 
 ## Architecture
+![DriftCache Architecture](./architecture.png)
 
-```
-┌───────────────────────────────────────────────────────────────────────┐
-│                         DriftCache Instance                          │
-│                                                                       │
-│  ┌──────────┐    ┌───────────┐    ┌──────────────────────────────┐   │
-│  │ L1 Cache │◄───│ DriftCache│───►│ Hash Ring (consistent hash)  │   │
-│  │  (LRU)   │    │Orchestrator│   │ 150 virtual nodes per shard  │   │
-│  └──────────┘    └─────┬─────┘    └──────────┬───────────────────┘   │
-│                        │                      │                       │
-│  ┌──────────────────┐  │  ┌────────────────────────────────────────┐ │
-│  │  Invalidation    │◄─┤  │           Shard Clients               │ │
-│  │  (Redis Pub/Sub) │  │  │  ┌────────┐ ┌────────┐ ┌────────┐    │ │
-│  └──────────────────┘  │  │  │Shard 1 │ │Shard 2 │ │Shard 3 │    │ │
-│                        │  │  │:6379   │ │:6380   │ │:6381   │    │ │
-│  ┌──────────────────┐  │  │  └────────┘ └────────┘ └────────┘    │ │
-│  │  Health Checker   │◄─┤  └────────────────────────────────────────┘ │
-│  │  (ping + remove)  │  │                                             │
-│  └──────────────────┘  │  ┌────────────────────────────────────────┐ │
-│                        │  │  Hot Key Tracker (sliding window)      │ │
-│  ┌──────────────────┐  │  │  Replicates to neighbor shards         │ │
-│  │    Metrics        │◄─┘  └────────────────────────────────────────┘ │
-│  │ (circular buffer) │                                                │
-│  └──────────────────┘                                                │
-└───────────────────────────────────────────────────────────────────────┘
-```
+## Dashboard
+
+![DriftCache dashboard showing live shard metrics, hit/miss ratio, and remap comparison](./dashboard.png)
+![DriftCache dashboard showing live shard metrics, hit/miss ratio, and remap comparison](./dashboard2.png)
 
 ### Read Path
 
@@ -214,7 +194,7 @@ new DriftCache(config: DriftCacheConfig)
 ### `destroyShardClients()`
 
 ```typescript
-import { destroyShardClients } from "@driftcache/core";
+import { destroyShardClients } from "driftcache";
 await destroyShardClients(); // Call once at process exit
 ```
 
@@ -222,24 +202,27 @@ Shard clients live in a shared global pool. Call this after all DriftCache insta
 
 ## Benchmarks
 
-Real numbers from live Redis testing (3 shards, localhost):
+Real numbers from live Redis testing (3 shards, localhost, 100,000 sample keys unless noted):
 
 | Metric | Value |
 |---|---|
 | L1 hit latency | **0.02ms** (p50) |
 | L2 hit latency | **0.19ms** (p99) |
-| Key distribution (3 shards) | **30%/30%/40%** (max 21% deviation) |
-| Remap on shard add (consistent) | **~27%** of keys |
-| Remap on shard add (naive modulo) | **~75%** of keys |
-| Failover detection time | **~1.2s** (500ms interval, 2 threshold) |
-| Failover recovery time | **~1.1s** |
-| During-outage success rate | **100%** (keys re-routed to live shards) |
+| Key distribution (3 shards, 150 vnodes) | **~31% / 34% / 35%** (max ~7% deviation) |
+| Remap on shard add (consistent hashing) | **~27.21%** of keys (theoretical optimum: 25%) |
+| Remap on shard add (naive modulo) | **~74.85%** of keys |
+| Failover detection time | **~1311ms** (2s interval, 3-failure threshold) |
+| Failover recovery time | **~786ms** |
+| During-outage success rate | **100%** (200/200 requests re-routed to live shards) |
+| Hot-key replication peak load | **~40%** of traffic absorbed by the hottest key without single-shard bottleneck |
+
+> **Note:** these figures come from the most recent verified benchmark runs in this project's build process. Re-run `scripts/remap-benchmark.js`, `scripts/failover-test.js`, and `scripts/hotkey-test.js` yourself before quoting these numbers publicly (e.g. in an interview) to confirm they still reproduce on your machine.
 
 ## Design Decisions
 
 ### Why MurmurHash3 finalization mix?
 
-The base hash is FNV-1a, which is fast but has poor distribution for virtual node naming. Applying MurmurHash3's `fmix32` step after FNV-1a dramatically improves distribution — reducing max shard deviation from ~65% to ~21%.
+The base hash is FNV-1a, which is fast but has poor avalanche behavior on its own — small input changes don't spread well across output bits, which hurts even distribution across the ring. Applying MurmurHash3's `fmix32` finalization step after FNV-1a fixes this: it reduced max shard distribution deviation from **~65%** (raw FNV-1a) to **~7%** (at 150 virtual nodes), with no change to the ring logic itself — only the hash function's output quality changed.
 
 ### Why filter self-published invalidations?
 
@@ -251,7 +234,7 @@ Redis connections are expensive. Multiple DriftCache instances in the same proce
 
 ### Why 150 virtual nodes per shard?
 
-Testing showed 150 vnodes achieves a good balance between distribution evenness (~21% max deviation) and ring lookup speed. Fewer vnodes (50) gave ~40% deviation; more (500) gave diminishing returns for added memory.
+Testing showed 150 vnodes achieves a good balance between distribution evenness (~7% max deviation) and ring lookup speed. Fewer vnodes (50) gave noticeably worse distribution; more (300+) gave diminishing returns for added memory and lookup cost.
 
 ## Project Structure
 

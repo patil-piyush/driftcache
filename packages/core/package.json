@@ -11,6 +11,9 @@
     "dist/**/*.js.map",
     "dist/**/*.d.ts.map",
     "README.md",
+    "architecture.png",
+    "dashboard.png",
+    "dashboard2.png",
     "LICENSE"
   ],
   "scripts": {
