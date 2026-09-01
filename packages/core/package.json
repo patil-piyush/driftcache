@@ -1,5 +1,5 @@
 {
-  "name": "@driftcache/core",
+  "name": "driftcache",
   "version": "0.1.0",
   "description": "Distributed cache router with consistent hashing, tiered L1/L2 caching, pub/sub invalidation, health-checked failover, and hot-key replication.",
   "private": false,
@@ -33,7 +33,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-org/driftcache.git",
+    "url": "https://github.com/patil-piyush/driftcache.git",
     "directory": "packages/core"
   },
   "dependencies": {

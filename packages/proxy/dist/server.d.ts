@@ -1,5 +1,5 @@
 import express from "express";
-import { DriftCache, DriftCacheConfig } from "@driftcache/core";
+import { DriftCache, DriftCacheConfig } from "driftcache";
 export interface ProxyServerOptions {
     port: number;
     cacheConfig: DriftCacheConfig;

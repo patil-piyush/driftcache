@@ -6,7 +6,7 @@ interface Props {
   p99: number;
 }
 
-const COLORS = ["#10b981", "#f59e0b", "#f43f5e"];
+const COLORS = ["#737373", "#a3a3a3", "#f5f5f5"];
 
 export function LatencyPercentiles({ p50, p95, p99 }: Props) {
   const data = [
@@ -17,20 +17,21 @@ export function LatencyPercentiles({ p50, p95, p99 }: Props) {
 
   return (
     <ResponsiveContainer width="100%" height={220}>
-      <BarChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#2d3a4d" />
-        <XAxis dataKey="name" tick={{ fill: "#8a94a6", fontSize: 12 }} />
-        <YAxis tick={{ fill: "#8a94a6", fontSize: 12 }} unit="ms" />
+      <BarChart data={data} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#333333" vertical={false} />
+        <XAxis dataKey="name" tick={{ fill: "#737373", fontSize: 12 }} tickLine={false} axisLine={false} />
+        <YAxis tick={{ fill: "#737373", fontSize: 12 }} tickLine={false} axisLine={false} />
         <Tooltip
-          contentStyle={{ background: "#1a2332", border: "1px solid #2d3a4d", borderRadius: 8, color: "#e8edf5" }}
-          formatter={(val: number) => [`${val}ms`, "Latency"]}
+          cursor={{ fill: '#1f1f1f' }}
+          contentStyle={{ background: "#1a1a1a", border: "1px solid #333333", borderRadius: 4, color: "#f5f5f5" }}
+          formatter={(val: any) => [`${val}ms`, "Latency"]}
         />
-        <Bar dataKey="ms" radius={[6, 6, 0, 0]} maxBarSize={80}>
+        <Bar dataKey="ms" radius={[2, 2, 0, 0]} maxBarSize={60}>
           {data.map((entry, i) => (
             <Cell key={i} fill={entry.color} />
           ))}
-          <LabelList dataKey="ms" position="top" fill="#e8edf5" fontSize={13} fontWeight={600}
-            formatter={(v: number) => `${v}ms`} />
+          <LabelList dataKey="ms" position="top" fill="#a3a3a3" fontSize={12} fontWeight={500}
+            formatter={(v: any) => `${v}`} />
         </Bar>
       </BarChart>
     </ResponsiveContainer>

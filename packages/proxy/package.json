@@ -13,7 +13,11 @@
     "test": "jest"
   },
   "dependencies": {
-    "@driftcache/core": "1.0.0",
+    "cors": "^2.8.6",
+    "driftcache": "0.1.0",
     "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19"
   }
 }

@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
-import { DriftCache, DriftCacheConfig, destroyShardClients } from "@driftcache/core";
+import cors from "cors";
+import { DriftCache, DriftCacheConfig, destroyShardClients } from "driftcache";
 
 export interface ProxyServerOptions {
   port: number;
@@ -11,6 +12,7 @@ export async function startProxyServer(
 ): Promise<{ app: ReturnType<typeof express>; cache: DriftCache; close: () => Promise<void> }> {
   const app = express();
 
+  app.use(cors());
   app.use(express.json());
 
   const cache = new DriftCache(options.cacheConfig);

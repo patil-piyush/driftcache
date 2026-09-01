@@ -5,21 +5,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.startProxyServer = startProxyServer;
 const express_1 = __importDefault(require("express"));
-const core_1 = require("@driftcache/core");
+const cors_1 = __importDefault(require("cors"));
+const driftcache_1 = require("driftcache");
 async function startProxyServer(options) {
     const app = (0, express_1.default)();
+    app.use((0, cors_1.default)());
     app.use(express_1.default.json());
-    const cache = new core_1.DriftCache(options.cacheConfig);
+    const cache = new driftcache_1.DriftCache(options.cacheConfig);
     await cache.initialize();
     // --- Cache routes ---
     app.get("/cache/:key", async (req, res) => {
         try {
-            const value = await cache.get(req.params.key);
+            const key = req.params.key;
+            const value = await cache.get(key);
             if (value === null) {
                 res.status(404).json({ error: "Key not found" });
                 return;
             }
-            res.json({ key: req.params.key, value });
+            res.json({ key, value });
         }
         catch (err) {
             const message = err instanceof Error ? err.message : "Internal error";
@@ -28,13 +31,14 @@ async function startProxyServer(options) {
     });
     app.put("/cache/:key", async (req, res) => {
         try {
+            const key = req.params.key;
             const { value, ttlSeconds } = req.body;
             if (value === undefined) {
                 res.status(400).json({ error: "Missing 'value' in request body" });
                 return;
             }
-            await cache.set(req.params.key, value, { ttlSeconds });
-            res.status(201).json({ key: req.params.key, status: "ok" });
+            await cache.set(key, value, { ttlSeconds });
+            res.status(201).json({ key, status: "ok" });
         }
         catch (err) {
             const message = err instanceof Error ? err.message : "Internal error";
@@ -43,8 +47,9 @@ async function startProxyServer(options) {
     });
     app.delete("/cache/:key", async (req, res) => {
         try {
-            await cache.delete(req.params.key);
-            res.json({ key: req.params.key, status: "deleted" });
+            const key = req.params.key;
+            await cache.delete(key);
+            res.json({ key, status: "deleted" });
         }
         catch (err) {
             const message = err instanceof Error ? err.message : "Internal error";
@@ -71,6 +76,7 @@ async function startProxyServer(options) {
     const close = async () => {
         server.close();
         await cache.destroy();
+        await (0, driftcache_1.destroyShardClients)();
     };
     return { app, cache, close };
 }

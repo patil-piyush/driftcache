@@ -1,5 +1,5 @@
 import { startProxyServer } from "./server";
-import { DriftCacheConfig, ShardConfig } from "@driftcache/core";
+import { DriftCacheConfig, ShardConfig } from "driftcache";
 import * as fs from "fs";
 
 function printUsage(): void {
