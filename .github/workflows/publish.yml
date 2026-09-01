@@ -1,0 +1,39 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build --workspace=packages/core
+
+      # We copy the root README and LICENSE to the core package before publishing
+      - name: Prepare for publish
+        run: |
+          cp README.md packages/core/
+          cp LICENSE packages/core/
+
+      - name: Publish to npm
+        run: npm publish --workspace=packages/core --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

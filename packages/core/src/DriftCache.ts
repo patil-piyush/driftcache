@@ -2,6 +2,7 @@ import { HashRing } from "./hashRing";
 import {
   ShardConfig,
   createShardClients,
+  destroyShardClients,
   shardGet,
   shardSet,
   shardDelete,
@@ -239,7 +240,11 @@ export class DriftCache {
   }
 
   /**
-   * Graceful shutdown — stop timers, disconnect Redis.
+   * Graceful shutdown — stop timers, disconnect pub/sub.
+   *
+   * Note: this does NOT disconnect shard clients because they live
+   * in a shared global pool. Call `destroyShardClients()` separately
+   * once ALL DriftCache instances are done (e.g. at process exit).
    */
   async destroy(): Promise<void> {
     this.healthChecker.stopHealthChecks();

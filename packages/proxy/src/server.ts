@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { DriftCache, DriftCacheConfig } from "@driftcache/core";
+import { DriftCache, DriftCacheConfig, destroyShardClients } from "@driftcache/core";
 
 export interface ProxyServerOptions {
   port: number;
@@ -20,14 +20,15 @@ export async function startProxyServer(
 
   app.get("/cache/:key", async (req: Request, res: Response) => {
     try {
-      const value = await cache.get(req.params.key);
+      const key = req.params.key as string;
+      const value = await cache.get(key);
 
       if (value === null) {
         res.status(404).json({ error: "Key not found" });
         return;
       }
 
-      res.json({ key: req.params.key, value });
+      res.json({ key, value });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Internal error";
       res.status(500).json({ error: message });
@@ -36,6 +37,7 @@ export async function startProxyServer(
 
   app.put("/cache/:key", async (req: Request, res: Response) => {
     try {
+      const key = req.params.key as string;
       const { value, ttlSeconds } = req.body;
 
       if (value === undefined) {
@@ -43,8 +45,8 @@ export async function startProxyServer(
         return;
       }
 
-      await cache.set(req.params.key, value, { ttlSeconds });
-      res.status(201).json({ key: req.params.key, status: "ok" });
+      await cache.set(key, value, { ttlSeconds });
+      res.status(201).json({ key, status: "ok" });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Internal error";
       res.status(500).json({ error: message });
@@ -53,8 +55,9 @@ export async function startProxyServer(
 
   app.delete("/cache/:key", async (req: Request, res: Response) => {
     try {
-      await cache.delete(req.params.key);
-      res.json({ key: req.params.key, status: "deleted" });
+      const key = req.params.key as string;
+      await cache.delete(key);
+      res.json({ key, status: "deleted" });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Internal error";
       res.status(500).json({ error: message });
@@ -88,6 +91,7 @@ export async function startProxyServer(
   const close = async () => {
     server.close();
     await cache.destroy();
+    await destroyShardClients();
   };
 
   return { app, cache, close };

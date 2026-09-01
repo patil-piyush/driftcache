@@ -1,15 +1,45 @@
 {
   "name": "@driftcache/core",
-  "version": "1.0.0",
+  "version": "0.1.0",
+  "description": "Distributed cache router with consistent hashing, tiered L1/L2 caching, pub/sub invalidation, health-checked failover, and hot-key replication.",
   "private": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts.map",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "cache",
+    "distributed-cache",
+    "redis",
+    "consistent-hashing",
+    "hash-ring",
+    "lru",
+    "failover",
+    "pub-sub",
+    "hot-key",
+    "sharding"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/driftcache.git",
+    "directory": "packages/core"
   },
   "dependencies": {
-    "express": "^5.2.1",
     "ioredis": "^6.0.0"
+  },
+  "peerDependencies": {
+    "ioredis": ">=5.0.0"
   }
 }

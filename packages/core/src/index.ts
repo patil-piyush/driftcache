@@ -10,6 +10,7 @@ export {
   shardSet,
   shardDelete,
   pingShard,
+  destroyShardClients,
 } from "./shardClient";
 export type { ShardConfig } from "./shardClient";
 

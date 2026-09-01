@@ -1,0 +1,14 @@
+{
+  "shards": [
+    { "id": "shard-1", "host": "localhost", "port": 6379 },
+    { "id": "shard-2", "host": "localhost", "port": 6380 },
+    { "id": "shard-3", "host": "localhost", "port": 6381 }
+  ],
+  "l1MaxSize": 1000,
+  "defaultTtlSeconds": 300,
+  "healthCheckIntervalMs": 500,
+  "healthCheckThreshold": 2,
+  "hotKeyThreshold": 50,
+  "hotKeyWindowMs": 5000,
+  "hotKeyReplicaCount": 2
+}

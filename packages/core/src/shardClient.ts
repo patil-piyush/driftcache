@@ -111,3 +111,19 @@ export async function pingShard(
     return false;
   }
 }
+
+/**
+ * Disconnect all shard clients and clear the connection pool.
+ * Required for clean test teardown and graceful process shutdown.
+ */
+export async function destroyShardClients(): Promise<void> {
+  for (const [id, client] of clients) {
+    try {
+      client.disconnect();
+    } catch {
+      // Ignore disconnect errors during teardown.
+    }
+  }
+
+  clients.clear();
+}

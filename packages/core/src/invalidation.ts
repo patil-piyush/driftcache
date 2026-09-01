@@ -1,4 +1,5 @@
 import Redis from "ioredis";
+import { randomBytes } from "crypto";
 
 const CHANNEL = "driftcache:invalidate";
 
@@ -6,11 +7,20 @@ export interface InvalidationMessage {
   key: string;
   operation: "set" | "del";
   timestamp: number;
+  sourceId: string;
 }
 
 export class Invalidation {
   private publisher: Redis | null = null;
   private subscriber: Redis | null = null;
+
+  /**
+   * Unique identifier for this Invalidation instance.
+   * Used to ignore self-published messages — without this,
+   * a set() would immediately evict the key from the same
+   * instance's L1 cache via the pub/sub round-trip.
+   */
+  readonly instanceId = randomBytes(8).toString("hex");
 
   /**
    * Initialise with a Redis connection config. Creates two connections:
@@ -56,6 +66,7 @@ export class Invalidation {
       key,
       operation,
       timestamp: Date.now(),
+      sourceId: this.instanceId,
     };
 
     await this.publisher.publish(CHANNEL, JSON.stringify(message));
@@ -65,6 +76,9 @@ export class Invalidation {
    * Subscribe to invalidation events. Call once at startup.
    * The callback receives each invalidation message so the caller
    * can evict stale L1 entries.
+   *
+   * Messages published by THIS instance are automatically filtered
+   * out so a set() won't evict its own just-written L1 entry.
    */
   async subscribeToInvalidations(
     onMessage: (msg: InvalidationMessage) => void
@@ -76,6 +90,12 @@ export class Invalidation {
     this.subscriber.on("message", (_channel: string, raw: string) => {
       try {
         const msg = JSON.parse(raw) as InvalidationMessage;
+
+        // Skip messages we published ourselves.
+        if (msg.sourceId === this.instanceId) {
+          return;
+        }
+
         onMessage(msg);
       } catch {
         console.error("Failed to parse invalidation message:", raw);
