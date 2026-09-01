@@ -130,12 +130,12 @@ The dashboard polls `/metrics` and `/health` from the proxy and displays:
 - Real-time shard health status
 
 ## Architecture
-![DriftCache Architecture](./architecture.png)
+![DriftCache Architecture](https://raw.githubusercontent.com/patil-piyush/driftcache/main/packages/core/architecture.png)
 
 ## Dashboard
 
-![DriftCache dashboard showing live shard metrics, hit/miss ratio, and remap comparison](./dashboard.png)
-![DriftCache dashboard showing live shard metrics, hit/miss ratio, and remap comparison](./dashboard2.png)
+![DriftCache dashboard showing live shard metrics, hit/miss ratio, and remap comparison](https://raw.githubusercontent.com/patil-piyush/driftcache/main/packages/core/dashboard.png)
+![DriftCache dashboard showing live shard metrics, hit/miss ratio, and remap comparison](https://raw.githubusercontent.com/patil-piyush/driftcache/main/packages/core/dashboard2.png)
 
 ### Read Path
 
