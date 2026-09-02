@@ -215,8 +215,8 @@ Real numbers from live Redis testing (3 shards, localhost, 100,000 sample keys u
 | Failover recovery time | **~786ms** |
 | During-outage success rate | **100%** (200/200 requests re-routed to live shards) |
 | Hot-key read distribution | Read requests for the hottest key distributed evenly across 3 replica shards: **33.3% / 33.3% / 33.3%** (round-robin) |
-
-> **Note:** these figures come from the most recent verified benchmark runs in this project's build process. Re-run `scripts/remap-benchmark.js`, `scripts/failover-test.js`, and `scripts/hotkey-test.js` yourself before quoting these numbers publicly (e.g. in an interview) to confirm they still reproduce on your machine.
+<!-- 
+> **Note:** these figures come from the most recent verified benchmark runs in this project's build process. Re-run `scripts/remap-benchmark.js`, `scripts/failover-test.js`, and `scripts/hotkey-test.js` yourself before quoting these numbers publicly (e.g. in an interview) to confirm they still reproduce on your machine. -->
 
 ## Design Decisions
 
