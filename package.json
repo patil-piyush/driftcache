@@ -10,7 +10,7 @@
     "test:proxy": "npm test --workspace=packages/proxy",
     "test:dashboard": "npm test --workspace=packages/dashboard"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "keywords": [],
