@@ -214,7 +214,7 @@ Real numbers from live Redis testing (3 shards, localhost, 100,000 sample keys u
 | Failover detection time | **~1311ms** (2s interval, 3-failure threshold) |
 | Failover recovery time | **~786ms** |
 | During-outage success rate | **100%** (200/200 requests re-routed to live shards) |
-| Hot-key replication peak load | **~40%** of traffic absorbed by the hottest key without single-shard bottleneck |
+| Hot-key read distribution | Read requests for the hottest key distributed evenly across 3 replica shards: **33.3% / 33.3% / 33.3%** (round-robin) |
 
 > **Note:** these figures come from the most recent verified benchmark runs in this project's build process. Re-run `scripts/remap-benchmark.js`, `scripts/failover-test.js`, and `scripts/hotkey-test.js` yourself before quoting these numbers publicly (e.g. in an interview) to confirm they still reproduce on your machine.
 
@@ -235,6 +235,10 @@ Redis connections are expensive. Multiple DriftCache instances in the same proce
 ### Why 150 virtual nodes per shard?
 
 Testing showed 150 vnodes achieves a good balance between distribution evenness (~7% max deviation) and ring lookup speed. Fewer vnodes (50) gave noticeably worse distribution; more (300+) gave diminishing returns for added memory and lookup cost.
+
+### How does hot-key replication distribute reads?
+
+When a key is flagged as "hot" (access count exceeds the threshold within a sliding window), `set()` replicates the value to neighboring shards on the ring. On the read side, `get()` checks `isHot(key)` and, if true, distributes L2 reads across the primary shard plus its replicas using round-robin (not random). Round-robin was chosen over random selection because it guarantees perfectly even distribution over time and is easier to verify in testing. If the chosen replica misses (e.g. due to replication lag), `get()` falls back to the primary shard before declaring a cache miss.
 
 ## Project Structure
 
