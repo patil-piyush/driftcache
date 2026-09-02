@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2] — 2026-09-02
+
+### Fixed
+- **Hot-key read distribution:** `get()` previously always routed reads to the primary shard via `hashRing.getNode(key)`, even when the key was flagged as hot and had been replicated to neighboring shards by `set()`. This meant 100% of read traffic for a hot key still hit a single shard, defeating the purpose of hot-key replication. `get()` now checks `isHot(key)` and distributes L2 reads across the primary shard and its replicas using round-robin. If the chosen replica misses (e.g. replication lag), it falls back to the primary before declaring a cache miss. Verified against live Redis: read distribution for the hottest key went from 100%/0%/0% (all on primary) to 33.3%/33.3%/33.3% (evenly across 3 shards).
+
 ## [0.1.0] — 2026-09-01
 
 ### Added

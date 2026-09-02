@@ -37,7 +37,24 @@ export declare class DriftCache {
     private readonly hotKeyTracker;
     private readonly defaultTtlSeconds;
     private initialized;
+    /**
+     * Round-robin counter for distributing hot-key reads across replicas.
+     * Using round-robin (instead of Math.random()) because it guarantees
+     * perfectly even distribution over time and is easier to verify in tests.
+     */
+    private hotKeyRRCounter;
     constructor(config: DriftCacheConfig);
+    /**
+     * Compute the full set of shards that hold (or should hold) a hot key:
+     * the primary shard from the hash ring plus the replica shards.
+     *
+     * This reuses the exact same replica-selection logic as
+     * hotKeyTracker.replicateHotKey() so reads and writes agree on
+     * which shards actually have the value. Both walk the ring snapshot
+     * from index 0, collecting the first N distinct shard IDs that
+     * aren't the primary.
+     */
+    private getHotKeyShards;
     /**
      * Async initialization: set up pub/sub and start background tasks.
      * Must be called before using get/set/delete.
@@ -47,8 +64,10 @@ export declare class DriftCache {
      * Full GET flow:
      * 1. Record access for hot-key tracking.
      * 2. Check L1 → on hit, return immediately.
-     * 3. Check L2 (Redis via hash ring) → on hit, populate L1 and return.
-     * 4. On full miss, return null.
+     * 3. If the key is hot, round-robin the L2 read across primary + replicas.
+     *    On a replica miss, fall back to the primary before declaring a miss.
+     * 4. If the key is not hot, read from the primary shard only (existing path).
+     * 5. On full miss, return null.
      */
     get(key: string): Promise<unknown | null>;
     /**
